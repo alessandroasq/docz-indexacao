@@ -115,8 +115,10 @@ export default function DocTypeEditor() {
 
   const setDefault = (k, v, oldKey) => {
     const defaults = { ...(selectedType?.defaults || {}) };
-    if (oldKey && oldKey !== k) delete defaults[oldKey];
-    if (k) defaults[k] = v;
+    // Always remove the old key first (even if it's an empty string)
+    delete defaults[oldKey];
+    // Only add the new key if it's non-empty
+    if (k.trim()) defaults[k] = v;
     updateType(selectedTypeKey, { defaults });
   };
 

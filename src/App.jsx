@@ -68,6 +68,7 @@ function AppInner() {
             onDone={handleDone}
             onBack={() => setScreen("queue")}
             autoAI={autoAI}
+            preloadedAiData={aiResults[selectedDoc.id] || null}
           />
         )}
         {screen === "dashboard" && (

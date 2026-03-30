@@ -12,12 +12,23 @@ const TABS = [
 
 export default function ConfigScreen({ onBack }) {
   const [activeTab, setActiveTab] = useState("doctypes");
-  const { resetToDefaults } = useConfig();
+  const { save, discard, resetToDefaults, isDirty } = useConfig();
 
   const handleReset = () => {
     if (window.confirm("Restaurar todos os padrões? Suas configurações personalizadas serão perdidas.")) {
       resetToDefaults();
     }
+  };
+
+  const handleDiscard = () => {
+    if (window.confirm("Descartar todas as alterações não salvas?")) {
+      discard();
+    }
+  };
+
+  const handleBack = () => {
+    if (isDirty && !window.confirm("Há alterações não salvas. Deseja sair sem salvar?")) return;
+    onBack();
   };
 
   return (
@@ -26,8 +37,8 @@ export default function ConfigScreen({ onBack }) {
       <div className="bg-white border-b border-slate-200 px-6 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-4">
           <button
-            onClick={onBack}
-            className="text-xs text-slate-400 hover:text-slate-600 transition-colors py-3"
+            onClick={handleBack}
+            className="text-xs text-slate-400 hover:text-slate-600 transition-colors py-3 shrink-0"
           >
             ← Voltar à fila
           </button>
@@ -48,12 +59,36 @@ export default function ConfigScreen({ onBack }) {
             ))}
           </div>
         </div>
-        <button
-          onClick={handleReset}
-          className="text-xs px-3 py-1.5 text-red-500 border border-red-200 rounded hover:bg-red-50 transition-colors"
-        >
-          Restaurar padrões
-        </button>
+
+        {/* Save / Discard / Reset actions */}
+        <div className="flex items-center gap-2 shrink-0">
+          {isDirty && (
+            <span className="text-xs text-amber-600 font-semibold bg-amber-50 border border-amber-200 px-2 py-1 rounded">
+              ● Alterações não salvas
+            </span>
+          )}
+          <button
+            onClick={handleDiscard}
+            disabled={!isDirty}
+            className="text-xs px-3 py-1.5 text-slate-500 border border-slate-200 rounded hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          >
+            Descartar
+          </button>
+          <button
+            onClick={save}
+            disabled={!isDirty}
+            className="text-xs px-4 py-1.5 font-semibold text-white bg-blue-600 rounded hover:bg-blue-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          >
+            Salvar configuração
+          </button>
+          <span className="w-px h-4 bg-slate-200 mx-1" />
+          <button
+            onClick={handleReset}
+            className="text-xs px-3 py-1.5 text-red-500 border border-red-200 rounded hover:bg-red-50 transition-colors"
+          >
+            Restaurar padrões
+          </button>
+        </div>
       </div>
 
       {/* Tab content */}
