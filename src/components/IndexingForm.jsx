@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { DOCUMENT_TYPES } from "../data/documentTypes";
 import { MOCK_AI_EXTRACTION } from "../data/mockData";
 import { validateCNPJ, isMaskComplete } from "../utils/validators";
@@ -110,6 +110,21 @@ export default function IndexingForm({ doc, onSave, onSkip, selectedPdfText, aut
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [handleSave, onSkip]);
+
+  const fieldsRef = useRef(null);
+  const handleFieldsKeyDown = useCallback((e) => {
+    if (e.key !== "Tab") return;
+    const container = fieldsRef.current;
+    if (!container) return;
+    const focusable = Array.from(container.querySelectorAll("input, select, textarea"));
+    const idx = focusable.indexOf(document.activeElement);
+    if (idx === -1) return;
+    e.preventDefault();
+    const next = e.shiftKey
+      ? focusable[(idx - 1 + focusable.length) % focusable.length]
+      : focusable[(idx + 1) % focusable.length];
+    next?.focus();
+  }, []);
 
   const filledCount = cfg.fields.filter((f) => {
     const v = values[f.id];
@@ -322,7 +337,7 @@ export default function IndexingForm({ doc, onSave, onSkip, selectedPdfText, aut
             <p className="text-lg font-semibold text-emerald-700">Indexado com sucesso!</p>
           </div>
         ) : (
-          <div className="flex flex-col gap-5">
+          <div ref={fieldsRef} onKeyDown={handleFieldsKeyDown} className="flex flex-col gap-5">
             {cfg.fields.map((f) => renderField(f))}
           </div>
         )}

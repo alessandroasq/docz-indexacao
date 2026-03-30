@@ -32,6 +32,7 @@ export default function SpellCheckArea({ value, onChange, maxLength, disabled, c
         {onPasteFromPDF && (
           <button
             type="button"
+            tabIndex={-1}
             onClick={onPasteFromPDF}
             title="Colar texto selecionado do PDF"
             className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center rounded text-slate-400 hover:text-blue-500 hover:bg-blue-50 transition-colors"
@@ -51,12 +52,14 @@ export default function SpellCheckArea({ value, onChange, maxLength, disabled, c
             </span>
             <div className="flex gap-2">
               <button
+                tabIndex={-1}
                 onClick={applyFixes}
                 className="px-2 py-1 bg-blue-600 text-white rounded text-xs font-semibold hover:bg-blue-700"
               >
                 ✓ Aplicar
               </button>
               <button
+                tabIndex={-1}
                 onClick={() => setFixes([])}
                 className="px-2 py-1 bg-white border border-slate-200 text-slate-500 rounded text-xs hover:bg-slate-50"
               >

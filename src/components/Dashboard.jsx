@@ -1,8 +1,10 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import { DASHBOARD_RECORDS } from "../data/mockData";
 import { DOCUMENT_TYPES } from "../data/documentTypes";
 import { ORGAOS_SET } from "../data/vocabulary";
 import { analyzeRecord, spellCheck } from "../utils/fuzzy";
+import AutocompleteField from "./fields/AutocompleteField";
+import SpellCheckArea from "./fields/SpellCheckArea";
 
 const OPERATORS = ["Ana Silva", "Carlos Souza", "Mariana Costa", "Pedro Santos"];
 const PAGE_SIZE = 12;
@@ -44,6 +46,62 @@ export default function Dashboard({ onBack }) {
   const pageData = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
   const totalErrors = records.reduce((s, r) => s + r.issues.length, 0);
+
+  const modalFieldRef = useRef(null);
+  useEffect(() => {
+    if (!editingCell || !modalFieldRef.current) return;
+    const el = modalFieldRef.current.querySelector("input, textarea");
+    el?.focus();
+  }, [editingCell?.field, editingCell?.recordId]);
+
+  const renderModalField = () => {
+    const { field } = editingCell;
+    if (field === "orgao") {
+      return (
+        <AutocompleteField
+          value={editValue}
+          onChange={setEditValue}
+          voc="orgaos"
+        />
+      );
+    }
+    if (field === "data") {
+      // dashboard stores DD/MM/YYYY; input type="date" needs YYYY-MM-DD
+      const toISO = (v) => {
+        const m = v?.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+        return m ? `${m[3]}-${m[2]}-${m[1]}` : "";
+      };
+      const fromISO = (v) => {
+        const m = v?.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        return m ? `${m[3]}/${m[2]}/${m[1]}` : "";
+      };
+      return (
+        <input
+          type="date"
+          value={toISO(editValue)}
+          onChange={(e) => setEditValue(fromISO(e.target.value))}
+          className="field-input"
+        />
+      );
+    }
+    if (field === "assunto") {
+      return (
+        <SpellCheckArea
+          value={editValue}
+          onChange={setEditValue}
+          maxLength={500}
+        />
+      );
+    }
+    return (
+      <input
+        type="text"
+        value={editValue}
+        onChange={(e) => setEditValue(e.target.value)}
+        className="field-input"
+      />
+    );
+  };
 
   const saveEdit = () => {
     if (!editingCell) return;
@@ -298,6 +356,11 @@ export default function Dashboard({ onBack }) {
           <div
             className="bg-white rounded-2xl p-6 w-[500px] shadow-2xl"
             onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") setEditingCell(null);
+              if (e.key === "Enter" && editingCell.field !== "assunto") { e.preventDefault(); saveEdit(); }
+              if (e.key === "Enter" && e.ctrlKey) { e.preventDefault(); saveEdit(); }
+            }}
           >
             <h3 className="text-base font-bold text-slate-800 mb-4">
               Corrigir: {editingCell.field === "orgao" ? "Órgão" : editingCell.field === "data" ? "Data" : "Assunto"}
@@ -320,6 +383,7 @@ export default function Dashboard({ onBack }) {
                     {editingCell.suggestion}
                   </div>
                   <button
+                    tabIndex={-1}
                     onClick={() => setEditValue(editingCell.suggestion)}
                     className="px-3 py-2 text-xs font-semibold bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors whitespace-nowrap"
                   >
@@ -329,22 +393,22 @@ export default function Dashboard({ onBack }) {
               </div>
             )}
 
-            {/* Campo de edição */}
+            {/* Campo de edição com guardrail do tipo */}
             <div className="mb-5">
-              <label className="text-xs font-semibold text-slate-500 mb-1.5 block">Valor corrigido</label>
-              <input
-                type="text"
-                value={editValue}
-                onChange={(e) => setEditValue(e.target.value)}
-                autoFocus
-                className="field-input"
-                onKeyDown={(e) => { if (e.key === "Enter") saveEdit(); if (e.key === "Escape") setEditingCell(null); }}
-              />
+              <label className="text-xs font-semibold text-slate-500 mb-1.5 block">
+                Valor corrigido
+                {editingCell.field === "assunto" && (
+                  <span className="text-slate-400 font-normal ml-1">(Ctrl+Enter para salvar)</span>
+                )}
+              </label>
+              <div ref={modalFieldRef}>
+                {renderModalField()}
+              </div>
             </div>
 
             <div className="flex justify-end gap-3">
-              <button onClick={() => setEditingCell(null)} className="btn-secondary">Cancelar</button>
-              <button onClick={saveEdit} className="btn-primary">✓ Corrigir</button>
+              <button tabIndex={-1} onClick={() => setEditingCell(null)} className="btn-secondary">Cancelar</button>
+              <button tabIndex={-1} onClick={saveEdit} className="btn-primary">✓ Corrigir</button>
             </div>
           </div>
         </div>
