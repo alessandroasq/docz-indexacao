@@ -24,10 +24,11 @@ function ConfBar({ pct }) {
   );
 }
 
-export default function IndexingForm({ doc, onSave, onSkip, selectedPdfText, autoAI, onFieldFocus }) {
+export default function IndexingForm({ doc, onSave, onSkip, selectedPdfText, autoAI, onFieldFocus, preloadedAiData }) {
   const { documentTypes } = useConfig();
   const cfg = documentTypes[doc.type];
-  const aiData = MOCK_AI_EXTRACTION[doc.type] || {};
+  // Use preloaded data from queue if available, otherwise fall back to mock
+  const aiData = preloadedAiData || MOCK_AI_EXTRACTION[doc.type] || {};
 
   const [values, setValues] = useState({});
   const [aiActive, setAiActive] = useState(false);
@@ -36,19 +37,28 @@ export default function IndexingForm({ doc, onSave, onSkip, selectedPdfText, aut
   const [showErrors, setShowErrors] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  // Reset when document changes
+  // Reset when document changes; if AI was already run in queue, pre-fill immediately
   useEffect(() => {
-    setValues(cfg.defaults ? { ...cfg.defaults } : {});
-    setAiActive(false);
+    if (preloadedAiData) {
+      const newVals = { ...(cfg?.defaults || {}) };
+      Object.entries(preloadedAiData).forEach(([key, data]) => {
+        if (data.value) newVals[key] = data.value;
+      });
+      setValues(newVals);
+      setAiActive(true);
+    } else {
+      setValues(cfg?.defaults ? { ...cfg.defaults } : {});
+      setAiActive(false);
+    }
     setAiLoading(false);
     setErrors({});
     setShowErrors(false);
     setSaved(false);
   }, [doc.id]);
 
-  // Auto-run AI if enabled
+  // Auto-run AI if enabled and no preloaded data
   useEffect(() => {
-    if (autoAI && !aiActive && !aiLoading) {
+    if (autoAI && !aiActive && !aiLoading && !preloadedAiData) {
       triggerAI();
     }
   }, [doc.id, autoAI]);

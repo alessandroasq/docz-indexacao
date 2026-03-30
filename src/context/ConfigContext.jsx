@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useContext, useState, useCallback, useRef } from "react";
 import { DOCUMENT_TYPES } from "../data/documentTypes";
 import { VOCABULARY } from "../data/vocabulary";
 
@@ -30,53 +30,78 @@ function loadFromStorage() {
   return null;
 }
 
+function buildInitial() {
+  const stored = loadFromStorage();
+  return stored ? { ...DEFAULTS, ...stored } : { ...DEFAULTS };
+}
+
 const ConfigContext = createContext(null);
 
 export function ConfigProvider({ children }) {
-  const [cfg, setCfg] = useState(() => {
-    const stored = loadFromStorage();
-    return stored ? { ...DEFAULTS, ...stored } : { ...DEFAULTS };
-  });
-  const [savedIndicator, setSavedIndicator] = useState(false);
+  // draft = in-memory edits (not yet persisted)
+  const [draft, setDraft] = useState(buildInitial);
+  // saved = last persisted state (used for discard)
+  const [saved, setSaved] = useState(buildInitial);
+  const [isDirty, setIsDirty] = useState(false);
 
-  const persist = useCallback((updater) => {
-    setCfg((prev) => {
+  // ref so save() always captures latest draft without stale closure
+  const draftRef = useRef(draft);
+  const updateDraft = useCallback((updater) => {
+    setDraft((prev) => {
       const next = typeof updater === "function" ? updater(prev) : updater;
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch {}
+      draftRef.current = next;
       return next;
     });
-    setSavedIndicator(true);
-    setTimeout(() => setSavedIndicator(false), 1500);
+    setIsDirty(true);
+  }, []);
+
+  const save = useCallback(() => {
+    const current = draftRef.current;
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(current)); } catch {}
+    setSaved(current);
+    setIsDirty(false);
+  }, []);
+
+  const discard = useCallback(() => {
+    setDraft(saved);
+    draftRef.current = saved;
+    setIsDirty(false);
+  }, [saved]);
+
+  const resetToDefaults = useCallback(() => {
+    setDraft({ ...DEFAULTS });
+    setSaved({ ...DEFAULTS });
+    draftRef.current = { ...DEFAULTS };
+    setIsDirty(false);
+    try { localStorage.removeItem(STORAGE_KEY); } catch {}
   }, []);
 
   const setDocumentTypes = useCallback(
-    (dt) => persist((p) => ({ ...p, documentTypes: dt })),
-    [persist]
+    (dt) => updateDraft((p) => ({ ...p, documentTypes: dt })),
+    [updateDraft]
   );
   const setVocabulary = useCallback(
-    (v) => persist((p) => ({ ...p, vocabulary: v })),
-    [persist]
+    (v) => updateDraft((p) => ({ ...p, vocabulary: v })),
+    [updateDraft]
   );
   const setSpellDict = useCallback(
-    (d) => persist((p) => ({ ...p, spellDict: d })),
-    [persist]
+    (d) => updateDraft((p) => ({ ...p, spellDict: d })),
+    [updateDraft]
   );
-  const resetToDefaults = useCallback(() => {
-    setCfg({ ...DEFAULTS });
-    try { localStorage.removeItem(STORAGE_KEY); } catch {}
-  }, []);
 
   return (
     <ConfigContext.Provider
       value={{
-        documentTypes: cfg.documentTypes,
-        vocabulary: cfg.vocabulary,
-        spellDict: cfg.spellDict,
+        documentTypes: draft.documentTypes,
+        vocabulary: draft.vocabulary,
+        spellDict: draft.spellDict,
         setDocumentTypes,
         setVocabulary,
         setSpellDict,
+        save,
+        discard,
         resetToDefaults,
-        savedIndicator,
+        isDirty,
       }}
     >
       {children}
