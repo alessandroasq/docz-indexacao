@@ -1,14 +1,16 @@
 import React, { useState, useCallback } from "react";
+import { ConfigProvider } from "./context/ConfigContext";
 import Header from "./components/layout/Header";
 import Queue from "./components/Queue";
 import IndexingView from "./components/IndexingView";
 import Dashboard from "./components/Dashboard";
+import ConfigScreen from "./components/config/ConfigScreen";
 import SplashScreen from "./components/SplashScreen";
 import { MOCK_QUEUE, MOCK_AI_EXTRACTION } from "./data/mockData";
 
-export default function App() {
+function AppInner() {
   const [splash, setSplash] = useState(true);
-  const [screen, setScreen] = useState("queue"); // "queue" | "indexing" | "dashboard"
+  const [screen, setScreen] = useState("queue"); // "queue" | "indexing" | "dashboard" | "config"
   const [selectedDoc, setSelectedDoc] = useState(null);
   const [queue, setQueue] = useState(MOCK_QUEUE.map((d) => ({ ...d, status: "pending" })));
   const [aiResults, setAiResults] = useState({});
@@ -33,7 +35,6 @@ export default function App() {
     setQueue((prev) =>
       prev.map((d) => (d.id === selectedDoc.id ? { ...d, status: "done" } : d))
     );
-    // Move to next pending
     const next = queue.find((d) => d.status === "pending" && d.id !== selectedDoc.id);
     if (next) {
       setSelectedDoc(next);
@@ -43,10 +44,7 @@ export default function App() {
     }
   };
 
-  const navigate = (target) => {
-    if (target === "queue") setScreen("queue");
-    else if (target === "dashboard") setScreen("dashboard");
-  };
+  const navigate = (target) => setScreen(target);
 
   return (
     <div className="min-h-screen bg-slate-100">
@@ -75,7 +73,18 @@ export default function App() {
         {screen === "dashboard" && (
           <Dashboard onBack={() => setScreen("queue")} />
         )}
+        {screen === "config" && (
+          <ConfigScreen onBack={() => setScreen("queue")} />
+        )}
       </main>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <ConfigProvider>
+      <AppInner />
+    </ConfigProvider>
   );
 }

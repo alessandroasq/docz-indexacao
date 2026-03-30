@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from "react";
-import { DOCUMENT_TYPES } from "../data/documentTypes";
+import { useConfig } from "../context/ConfigContext";
 
 const TYPE_COLORS = {
   decreto: "bg-blue-100 text-blue-700",
@@ -10,6 +10,7 @@ const TYPE_COLORS = {
 };
 
 export default function Queue({ queue, onSelect, aiResults, onRunAI, autoAI, setAutoAI }) {
+  const { documentTypes } = useConfig();
   const pending = queue.filter((d) => d.status === "pending").length;
   const done = queue.filter((d) => d.status === "done").length;
 
@@ -66,7 +67,7 @@ export default function Queue({ queue, onSelect, aiResults, onRunAI, autoAI, set
           const avgConf = ai
             ? Object.values(ai).reduce((s, d) => s + (d.confidence || 0), 0) / Object.keys(ai).length
             : 0;
-          const typeCfg = DOCUMENT_TYPES[doc.type];
+          const typeCfg = documentTypes[doc.type];
 
           return (
             <div

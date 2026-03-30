@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { DOCUMENT_TYPES } from "../data/documentTypes";
+import { useConfig } from "../context/ConfigContext";
 import { MOCK_AI_EXTRACTION } from "../data/mockData";
 import { validateCNPJ, isMaskComplete } from "../utils/validators";
 import AutocompleteField from "./fields/AutocompleteField";
@@ -25,7 +25,8 @@ function ConfBar({ pct }) {
 }
 
 export default function IndexingForm({ doc, onSave, onSkip, selectedPdfText, autoAI, onFieldFocus }) {
-  const cfg = DOCUMENT_TYPES[doc.type];
+  const { documentTypes } = useConfig();
+  const cfg = documentTypes[doc.type];
   const aiData = MOCK_AI_EXTRACTION[doc.type] || {};
 
   const [values, setValues] = useState({});
