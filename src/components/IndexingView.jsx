@@ -8,11 +8,20 @@ export default function IndexingView({ doc, onDone, onBack, autoAI }) {
   const [savedValues, setSavedValues] = useState(null);
   const [savedAiData, setSavedAiData] = useState(null);
   const [selectedPdfText, setSelectedPdfText] = useState(null);
+  const [activeZone, setActiveZone] = useState(null);
 
   const handleFormSave = (values, aiData) => {
     setSavedValues(values);
     setSavedAiData(aiData);
     setScreen("review");
+  };
+
+  const handleFieldFocus = (field) => {
+    if (field.pdfZone) {
+      setActiveZone({ ...field.pdfZone, label: field.label });
+    } else {
+      setActiveZone(null);
+    }
   };
 
   const handleConfirm = () => {
@@ -31,6 +40,8 @@ export default function IndexingView({ doc, onDone, onBack, autoAI }) {
           docType={doc.type}
           fileName={doc.file}
           onTextSelected={setSelectedPdfText}
+          activeZone={activeZone}
+          isScanned={doc.scanned}
         />
       </div>
 
@@ -65,6 +76,7 @@ export default function IndexingView({ doc, onDone, onBack, autoAI }) {
               onSkip={onBack}
               selectedPdfText={selectedPdfText}
               autoAI={autoAI}
+              onFieldFocus={handleFieldFocus}
             />
           ) : (
             <ReviewPanel

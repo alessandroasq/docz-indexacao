@@ -1,5 +1,8 @@
 // Field types:
 // text, date, select, autocomplete (with voc key), masked, regex, currency, cnpj, textarea (with spell check)
+//
+// pdfZone: { lineStart, lineEnd } — 0-indexed line numbers in MOCK_PDF_CONTENT for that docType
+// When a field with pdfZone is focused, PDFViewer scrolls to and highlights those lines.
 
 export const DOCUMENT_TYPES = {
   decreto: {
@@ -19,12 +22,14 @@ export const DOCUMENT_TYPES = {
         mask: "9999/9999",
         placeholder: "0000/0000",
         hint: "Formato: NNNN/AAAA",
+        pdfZone: { lineStart: 2, lineEnd: 2 },
       },
       {
         id: "data_pub",
         label: "Data de Publicação",
         type: "date",
         required: true,
+        pdfZone: { lineStart: 2, lineEnd: 2 },
       },
       {
         id: "orgao",
@@ -32,6 +37,7 @@ export const DOCUMENT_TYPES = {
         type: "autocomplete",
         required: true,
         voc: "orgaos",
+        pdfZone: { lineStart: 0, lineEnd: 0 },
       },
       {
         id: "assunto",
@@ -40,6 +46,7 @@ export const DOCUMENT_TYPES = {
         required: true,
         maxLength: 500,
         spellCheck: true,
+        pdfZone: { lineStart: 4, lineEnd: 6 },
       },
       {
         id: "esfera",
@@ -47,6 +54,7 @@ export const DOCUMENT_TYPES = {
         type: "select",
         required: true,
         options: ["Federal", "Estadual", "Municipal", "Distrital"],
+        pdfZone: { lineStart: 0, lineEnd: 0 },
       },
       {
         id: "situacao",
@@ -61,6 +69,7 @@ export const DOCUMENT_TYPES = {
         type: "autocomplete",
         required: false,
         voc: "diarios",
+        pdfZone: { lineStart: 23, lineEnd: 23 },
       },
       {
         id: "pagina",
@@ -69,6 +78,7 @@ export const DOCUMENT_TYPES = {
         required: false,
         min: 1,
         max: 9999,
+        pdfZone: { lineStart: 23, lineEnd: 23 },
       },
     ],
   },
@@ -89,12 +99,14 @@ export const DOCUMENT_TYPES = {
         pattern: "^[A-Z]{2,5}-\\d{3,5}\\/\\d{4}$",
         patternHint: "SIGLA-NNN/AAAA",
         placeholder: "SEI-0000/2026",
+        pdfZone: { lineStart: 3, lineEnd: 3 },
       },
       {
         id: "data_em",
         label: "Data de Emissão",
         type: "date",
         required: true,
+        pdfZone: { lineStart: 4, lineEnd: 4 },
       },
       {
         id: "remetente",
@@ -102,6 +114,7 @@ export const DOCUMENT_TYPES = {
         type: "autocomplete",
         required: true,
         voc: "orgaos",
+        pdfZone: { lineStart: 0, lineEnd: 1 },
       },
       {
         id: "destinatario",
@@ -109,6 +122,7 @@ export const DOCUMENT_TYPES = {
         type: "autocomplete",
         required: true,
         voc: "orgaos",
+        pdfZone: { lineStart: 6, lineEnd: 7 },
       },
       {
         id: "assunto",
@@ -117,12 +131,14 @@ export const DOCUMENT_TYPES = {
         required: true,
         maxLength: 500,
         spellCheck: true,
+        pdfZone: { lineStart: 9, lineEnd: 10 },
       },
       {
         id: "valor",
         label: "Valor Solicitado (R$)",
         type: "currency",
         required: false,
+        pdfZone: { lineStart: 15, lineEnd: 15 },
       },
       {
         id: "carater",
@@ -130,6 +146,7 @@ export const DOCUMENT_TYPES = {
         type: "select",
         required: false,
         options: ["Normal", "Urgente", "Urgentíssimo", "Confidencial"],
+        pdfZone: { lineStart: 19, lineEnd: 19 },
       },
       {
         id: "esfera_orc",
@@ -146,6 +163,7 @@ export const DOCUMENT_TYPES = {
         pattern: "^\\d{5}-\\d{8}\\/\\d{4}-\\d{2}$",
         patternHint: "00000-00000000/0000-00",
         placeholder: "00040-00025841/2026-15",
+        pdfZone: { lineStart: 18, lineEnd: 18 },
       },
     ],
   },
@@ -162,12 +180,14 @@ export const DOCUMENT_TYPES = {
         required: true,
         mask: "9999/9999",
         placeholder: "0000/0000",
+        pdfZone: { lineStart: 2, lineEnd: 2 },
       },
       {
         id: "data_pub",
         label: "Data de Publicação",
         type: "date",
         required: true,
+        pdfZone: { lineStart: 2, lineEnd: 2 },
       },
       {
         id: "orgao",
@@ -175,6 +195,7 @@ export const DOCUMENT_TYPES = {
         type: "autocomplete",
         required: true,
         voc: "orgaos",
+        pdfZone: { lineStart: 0, lineEnd: 0 },
       },
       {
         id: "autoridade",
@@ -182,6 +203,7 @@ export const DOCUMENT_TYPES = {
         type: "text",
         required: true,
         placeholder: "Nome completo da autoridade",
+        pdfZone: { lineStart: 4, lineEnd: 5 },
       },
       {
         id: "assunto",
@@ -190,6 +212,7 @@ export const DOCUMENT_TYPES = {
         required: true,
         maxLength: 500,
         spellCheck: true,
+        pdfZone: { lineStart: 10, lineEnd: 12 },
       },
       {
         id: "tipo_portaria",
@@ -197,12 +220,14 @@ export const DOCUMENT_TYPES = {
         type: "select",
         required: true,
         options: ["Nomeação", "Exoneração", "Designação", "Delegação", "Normativa", "Outra"],
+        pdfZone: { lineStart: 10, lineEnd: 10 },
       },
       {
         id: "vig_ini",
         label: "Início de Vigência",
         type: "date",
         required: false,
+        pdfZone: { lineStart: 15, lineEnd: 15 },
       },
       {
         id: "vig_fim",
@@ -226,12 +251,14 @@ export const DOCUMENT_TYPES = {
         pattern: "^CT-\\d{4}\\/\\d{4}$",
         patternHint: "CT-AAAA/NNNN",
         placeholder: "CT-2026/0045",
+        pdfZone: { lineStart: 0, lineEnd: 0 },
       },
       {
         id: "data_ass",
         label: "Data de Assinatura",
         type: "date",
         required: true,
+        pdfZone: { lineStart: 19, lineEnd: 19 },
       },
       {
         id: "contratante",
@@ -239,6 +266,7 @@ export const DOCUMENT_TYPES = {
         type: "autocomplete",
         required: true,
         voc: "orgaos",
+        pdfZone: { lineStart: 2, lineEnd: 2 },
       },
       {
         id: "contratada",
@@ -246,6 +274,7 @@ export const DOCUMENT_TYPES = {
         type: "text",
         required: true,
         placeholder: "Razão social da empresa",
+        pdfZone: { lineStart: 5, lineEnd: 5 },
       },
       {
         id: "cnpj",
@@ -253,6 +282,7 @@ export const DOCUMENT_TYPES = {
         type: "cnpj",
         required: true,
         placeholder: "00.000.000/0001-00",
+        pdfZone: { lineStart: 6, lineEnd: 6 },
       },
       {
         id: "objeto",
@@ -261,24 +291,28 @@ export const DOCUMENT_TYPES = {
         required: true,
         maxLength: 1000,
         spellCheck: true,
+        pdfZone: { lineStart: 8, lineEnd: 10 },
       },
       {
         id: "valor",
         label: "Valor Total (R$)",
         type: "currency",
         required: true,
+        pdfZone: { lineStart: 12, lineEnd: 13 },
       },
       {
         id: "vig_ini",
         label: "Início de Vigência",
         type: "date",
         required: true,
+        pdfZone: { lineStart: 15, lineEnd: 15 },
       },
       {
         id: "vig_fim",
         label: "Fim de Vigência",
         type: "date",
         required: true,
+        pdfZone: { lineStart: 15, lineEnd: 15 },
       },
       {
         id: "modalidade",
@@ -293,6 +327,7 @@ export const DOCUMENT_TYPES = {
           "Dispensa",
           "Inexigibilidade",
         ],
+        pdfZone: { lineStart: 16, lineEnd: 16 },
       },
     ],
   },
@@ -311,12 +346,14 @@ export const DOCUMENT_TYPES = {
         required: true,
         mask: "9999/9999",
         placeholder: "0000/0000",
+        pdfZone: { lineStart: 2, lineEnd: 2 },
       },
       {
         id: "data_pub",
         label: "Data de Publicação",
         type: "date",
         required: true,
+        pdfZone: { lineStart: 8, lineEnd: 8 },
       },
       {
         id: "orgao",
@@ -324,6 +361,7 @@ export const DOCUMENT_TYPES = {
         type: "autocomplete",
         required: true,
         voc: "orgaos",
+        pdfZone: { lineStart: 0, lineEnd: 0 },
       },
       {
         id: "assunto",
@@ -332,6 +370,7 @@ export const DOCUMENT_TYPES = {
         required: true,
         maxLength: 500,
         spellCheck: true,
+        pdfZone: { lineStart: 4, lineEnd: 5 },
       },
       {
         id: "situacao",
@@ -346,6 +385,7 @@ export const DOCUMENT_TYPES = {
         type: "autocomplete",
         required: false,
         voc: "diarios",
+        pdfZone: { lineStart: 15, lineEnd: 15 },
       },
     ],
   },

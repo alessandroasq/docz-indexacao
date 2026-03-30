@@ -24,7 +24,7 @@ function ConfBar({ pct }) {
   );
 }
 
-export default function IndexingForm({ doc, onSave, onSkip, selectedPdfText, autoAI }) {
+export default function IndexingForm({ doc, onSave, onSkip, selectedPdfText, autoAI, onFieldFocus }) {
   const cfg = DOCUMENT_TYPES[doc.type];
   const aiData = MOCK_AI_EXTRACTION[doc.type] || {};
 
@@ -251,6 +251,7 @@ export default function IndexingForm({ doc, onSave, onSkip, selectedPdfText, aut
         confidence={confidence}
         hasError={hasError}
         errorMsg={errors[f.id]}
+        onFocus={() => onFieldFocus && onFieldFocus(f)}
       >
         {fieldEl}
       </FieldWrapper>

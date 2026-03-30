@@ -78,7 +78,14 @@ export default function Queue({ queue, onSelect, aiResults, onRunAI, autoAI, set
               <span className="text-xs text-slate-400 font-mono">{doc.id}</span>
 
               <div>
-                <p className="text-sm font-medium text-slate-700 font-mono">{doc.file}</p>
+                <div className="flex items-center gap-1.5">
+                  <p className="text-sm font-medium text-slate-700 font-mono">{doc.file}</p>
+                  {doc.scanned && (
+                    <span className="text-xs bg-amber-100 text-amber-700 border border-amber-200 px-1.5 py-0.5 rounded font-medium">
+                      Digitalizado
+                    </span>
+                  )}
+                </div>
                 <p className="text-xs text-slate-400">{doc.size}</p>
               </div>
 
