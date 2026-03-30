@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { fuzzySearch } from "../../utils/fuzzy";
-import { VOCABULARY } from "../../data/vocabulary";
+import { useConfig } from "../../context/ConfigContext";
 
 export default function AutocompleteField({ value, onChange, voc, disabled, className }) {
+  const { vocabulary } = useConfig();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState(value || "");
   const [highlighted, setHighlighted] = useState(-1);
   const ref = useRef(null);
-  const items = VOCABULARY[voc] || [];
+  const items = vocabulary[voc] || [];
 
   const results = useMemo(() => fuzzySearch(query, items), [query, items]);
 

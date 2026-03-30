@@ -1,19 +1,21 @@
 import React, { useState, useEffect } from "react";
 import { spellCheck } from "../../utils/fuzzy";
+import { useConfig } from "../../context/ConfigContext";
 
 export default function SpellCheckArea({ value, onChange, maxLength, disabled, className, onPasteFromPDF }) {
+  const { spellDict } = useConfig();
   const [fixes, setFixes] = useState([]);
 
   useEffect(() => {
     if (!value) { setFixes([]); return; }
     const t = setTimeout(() => {
-      setFixes(spellCheck(value).fixes);
+      setFixes(spellCheck(value, spellDict).fixes);
     }, 400);
     return () => clearTimeout(t);
-  }, [value]);
+  }, [value, spellDict]);
 
   const applyFixes = () => {
-    onChange(spellCheck(value).corrected);
+    onChange(spellCheck(value, spellDict).corrected);
     setFixes([]);
   };
 

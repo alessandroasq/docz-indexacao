@@ -2,11 +2,11 @@
 export const MOCK_QUEUE = [
   { id: 1, file: "decreto_4587_2026.pdf", type: "decreto", pages: 3, size: "234 KB" },
   { id: 2, file: "oficio_SEI_0341_2026.pdf", type: "oficio", pages: 2, size: "189 KB" },
-  { id: 3, file: "portaria_0892_2026.pdf", type: "portaria", pages: 1, size: "145 KB" },
+  { id: 3, file: "portaria_0892_2026.pdf", type: "portaria", pages: 1, size: "145 KB", scanned: true },
   { id: 4, file: "contrato_CT0045_2026.pdf", type: "contrato", pages: 8, size: "612 KB" },
   { id: 5, file: "decreto_4590_2026.pdf", type: "decreto", pages: 2, size: "198 KB" },
   { id: 6, file: "oficio_GAB_0120_2026.pdf", type: "oficio", pages: 1, size: "112 KB" },
-  { id: 7, file: "resolucao_TC_0034_2026.pdf", type: "resolucao", pages: 4, size: "445 KB" },
+  { id: 7, file: "resolucao_TC_0034_2026.pdf", type: "resolucao", pages: 4, size: "445 KB", scanned: true },
   { id: 8, file: "portaria_1104_2026.pdf", type: "portaria", pages: 2, size: "201 KB" },
 ];
 

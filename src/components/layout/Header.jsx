@@ -1,6 +1,9 @@
 import React from "react";
+import { useConfig } from "../../context/ConfigContext";
 
 export default function Header({ screen, onNavigate }) {
+  const { savedIndicator } = useConfig();
+
   return (
     <header className="bg-slate-900 border-b-2 border-blue-600 sticky top-0 z-50">
       <div className="flex items-center justify-between px-5 py-2.5">
@@ -12,6 +15,11 @@ export default function Header({ screen, onNavigate }) {
             <span className="text-white font-bold text-base tracking-tight">DocZ</span>
             <span className="text-slate-500 text-xs ml-2">Indexação de Documentos</span>
           </div>
+          {savedIndicator && (
+            <span className="text-xs text-emerald-400 font-semibold ml-2 animate-pulse">
+              ✓ Config salva
+            </span>
+          )}
         </div>
         <nav className="flex gap-1">
           <button
@@ -33,6 +41,16 @@ export default function Header({ screen, onNavigate }) {
             }`}
           >
             Dashboard QA
+          </button>
+          <button
+            onClick={() => onNavigate("config")}
+            className={`px-3 py-1.5 rounded text-xs font-semibold transition-colors ${
+              screen === "config"
+                ? "bg-slate-700 text-blue-300"
+                : "text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            ⚙ Configuração
           </button>
         </nav>
       </div>

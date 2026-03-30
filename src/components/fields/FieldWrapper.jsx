@@ -1,11 +1,14 @@
 import React from "react";
 import { confidenceColor } from "../../utils/validators";
 
-export default function FieldWrapper({ field, confidence, hasError, errorMsg, children }) {
+export default function FieldWrapper({ field, confidence, hasError, errorMsg, onFocus, children }) {
   const conf = confidenceColor(confidence || 0);
 
   return (
-    <div className="group flex flex-col gap-1 rounded-lg px-2.5 py-2 -mx-2.5 -my-2 transition-all focus-within:bg-blue-50/60 focus-within:ring-1 focus-within:ring-blue-300/60">
+    <div
+      className="group flex flex-col gap-1 rounded-lg px-2.5 py-2 -mx-2.5 -my-2 transition-all focus-within:bg-blue-50/60 focus-within:ring-1 focus-within:ring-blue-300/60"
+      onFocus={onFocus}
+    >
       <div className="flex items-center gap-1.5">
         <label className="text-xs font-semibold text-slate-600 group-focus-within:text-blue-600 transition-colors">
           {field.label}

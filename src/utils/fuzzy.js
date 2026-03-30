@@ -40,20 +40,7 @@ export function fuzzySearch(query, items, maxResults = 12) {
     .slice(0, maxResults);
 }
 
-// Spell check dictionary (common typos in Brazilian government documents)
-const SPELL_DICT = {
-  "secertaria": "secretaria",
-  "secrataria": "secretaria",
-  "solcitação": "solicitação",
-  "suplmentar": "suplementar",
-  "nomeição": "nomeação",
-  "desingação": "designação",
-  "comisão": "comissão",
-  "equipamenots": "equipamentos",
-  "procuraduria": "procuradoria",
-};
-
-export function spellCheck(text) {
+export function spellCheck(text, dict = {}) {
   if (!text) return { corrected: text, fixes: [] };
   const fixes = [];
   const parts = text.split(/(\s+)/);
@@ -62,8 +49,8 @@ export function spellCheck(text) {
     const punct = word.match(/[.,;:!?()\[\]]+$/)?.[0] || "";
     const core = word.replace(/[.,;:!?()\[\]]+$/, "");
     const lower = core.toLowerCase();
-    if (SPELL_DICT[lower]) {
-      const fix = SPELL_DICT[lower];
+    if (dict[lower]) {
+      const fix = dict[lower];
       const cased = core[0] && core[0] === core[0].toUpperCase()
         ? fix[0].toUpperCase() + fix.slice(1)
         : fix;
