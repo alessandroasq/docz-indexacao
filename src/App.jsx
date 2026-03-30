@@ -3,9 +3,11 @@ import Header from "./components/layout/Header";
 import Queue from "./components/Queue";
 import IndexingView from "./components/IndexingView";
 import Dashboard from "./components/Dashboard";
+import SplashScreen from "./components/SplashScreen";
 import { MOCK_QUEUE, MOCK_AI_EXTRACTION } from "./data/mockData";
 
 export default function App() {
+  const [splash, setSplash] = useState(true);
   const [screen, setScreen] = useState("queue"); // "queue" | "indexing" | "dashboard"
   const [selectedDoc, setSelectedDoc] = useState(null);
   const [queue, setQueue] = useState(MOCK_QUEUE.map((d) => ({ ...d, status: "pending" })));
@@ -48,6 +50,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-100">
+      {splash && <SplashScreen onDone={() => setSplash(false)} />}
       <Header screen={screen} onNavigate={navigate} />
       <main>
         {screen === "queue" && (
