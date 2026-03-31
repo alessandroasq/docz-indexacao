@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { DASHBOARD_RECORDS } from "../data/mockData";
 import { DOCUMENT_TYPES } from "../data/documentTypes";
 import { ORGAOS_SET } from "../data/vocabulary";
@@ -46,6 +46,102 @@ export default function Dashboard({ onBack }) {
   const pageData = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
   const totalErrors = records.reduce((s, r) => s + r.issues.length, 0);
+
+  const operatorStats = useMemo(() => {
+    return OPERATORS.map((op) => {
+      const opRecs = records.filter((r) => r.op === op);
+      const errors = opRecs.filter((r) => r.issues.length > 0).length;
+      const rate = opRecs.length ? (errors / opRecs.length) * 100 : 0;
+      return { op, errors, total: opRecs.length, rate };
+    }).sort((a, b) => b.rate - a.rate);
+  }, [records]);
+
+  const fieldStats = useMemo(() => {
+    const counts = {};
+    records.forEach((r) =>
+      r.issues.forEach((i) => { counts[i.field] = (counts[i.field] || 0) + 1; })
+    );
+    const FIELD_LABELS = { orgao: "Órgão", data: "Data", assunto: "Assunto" };
+    return Object.entries(counts)
+      .map(([field, count]) => ({ field, count, label: FIELD_LABELS[field] || field }))
+      .sort((a, b) => b.count - a.count);
+  }, [records]);
+
+  const { patterns, recommendations } = useMemo(() => {
+    const avgRate = operatorStats.length
+      ? operatorStats.reduce((s, o) => s + o.rate, 0) / operatorStats.length
+      : 0;
+    const outlier = operatorStats.find((o) => o.rate >= avgRate * 1.8 && o.rate > 0);
+
+    const pats = [];
+    const recs = [];
+
+    // orgao spelling errors
+    const orgaoErrorRecs = records.filter((r) => r.issues.find((i) => i.field === "orgao"));
+    if (orgaoErrorRecs.length > 0) {
+      const wrongOrgaos = [...new Set(orgaoErrorRecs.map((r) => r.orgao))].slice(0, 4);
+      pats.push({
+        icon: "📄",
+        severity: "warn",
+        text: `"${wrongOrgaos.join('", "')}" — Erros de grafia recorrentes no campo Órgão`,
+      });
+      recs.push({
+        text: "Adicionar autocomplete fuzzy no campo Órgão Emissor — eliminaria 100% dos erros de grafia detectados.",
+        action: "Implementar Camada 2",
+        actionColor: "text-blue-600",
+      });
+    }
+
+    // impossible dates
+    const dateErrorRecs = records.filter((r) => r.issues.find((i) => i.field === "data"));
+    if (dateErrorRecs.length > 0) {
+      const wrongDates = [...new Set(dateErrorRecs.map((r) => r.data))].slice(0, 3);
+      pats.push({
+        icon: "📅",
+        severity: "error",
+        text: `Datas impossíveis encontradas: "${wrongDates.join('", "')}"`,
+        detail: "Validação de data não ativa",
+      });
+      recs.push({
+        text: "Ativar validação de máscara de data em todos os tipos documentais para impedir entradas como 32/02 ou 00/03.",
+        action: "Configurar na Camada 1",
+        actionColor: "text-blue-600",
+      });
+    }
+
+    // empty assunto
+    const emptyAssuntoCount = records.filter((r) => !r.assunto?.trim()).length;
+    if (emptyAssuntoCount > 0) {
+      pats.push({
+        icon: "🔴",
+        severity: "error",
+        text: `${emptyAssuntoCount} registro${emptyAssuntoCount > 1 ? "s" : ""} com campo Assunto vazio`,
+        detail: "Campo obrigatório não enforçado",
+      });
+      recs.push({
+        text: "Tornar Assunto campo obrigatório bloqueante — impedir salvar sem preenchimento.",
+        action: "Configurar na Camada 1",
+        actionColor: "text-blue-600",
+      });
+    }
+
+    // operator outlier
+    if (outlier) {
+      pats.push({
+        icon: "👤",
+        severity: "warn",
+        text: `${outlier.op}: ${outlier.rate.toFixed(1)}% de erro vs média ${avgRate.toFixed(1)}%`,
+        detail: "Pode precisar de treinamento adicional",
+      });
+      recs.push({
+        text: `Agendar sessão de reciclagem com ${outlier.op} — taxa de erro ${(outlier.rate / avgRate).toFixed(0)}x acima da média.`,
+        action: "Ação de Operações",
+        actionColor: "text-violet-600",
+      });
+    }
+
+    return { patterns: pats, recommendations: recs };
+  }, [records, operatorStats]);
 
   const modalFieldRef = useRef(null);
   useEffect(() => {
@@ -169,48 +265,64 @@ export default function Dashboard({ onBack }) {
         ))}
       </div>
 
-      {/* Operator stats */}
-      <div className="mb-6">
-        <h2 className="text-sm font-bold text-slate-700 mb-3">Erros por Operador</h2>
-        <div className="grid grid-cols-4 gap-3">
-          {OPERATORS.map((op) => {
-            const opRecs = records.filter((r) => r.op === op);
-            const opErrors = opRecs.filter((r) => r.issues.length > 0).length;
-            const rate = opRecs.length ? (opErrors / opRecs.length) * 100 : 0;
-            const errorFields = {};
-            opRecs.forEach((r) =>
-              r.issues.forEach((i) => { errorFields[i.field] = (errorFields[i.field] || 0) + 1; })
-            );
-            const topErrors = Object.entries(errorFields)
-              .sort((a, b) => b[1] - a[1])
-              .slice(0, 3);
-            return (
-              <div key={op} className="bg-white rounded-xl border border-slate-200 p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-semibold text-slate-700">{op}</span>
-                  <span className={`text-xs font-bold font-mono px-2 py-0.5 rounded ${
-                    rate === 0 ? "bg-emerald-50 text-emerald-700" :
-                    rate < 40 ? "bg-amber-50 text-amber-700" : "bg-red-50 text-red-700"
+      {/* Analytics row 1: Erros por Operador + Erros por Campo */}
+      <div className="grid grid-cols-2 gap-4 mb-6">
+        {/* Erros por Operador */}
+        <div className="bg-white rounded-xl border border-slate-200 p-5">
+          <h2 className="text-sm font-bold text-slate-700 mb-4 flex items-center gap-1.5">
+            <span>👤</span> Erros por Operador
+          </h2>
+          {(() => {
+            const maxRate = Math.max(...operatorStats.map((o) => o.rate), 1);
+            return operatorStats.map(({ op, errors, total, rate }) => (
+              <div key={op} className="mb-3 last:mb-0">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs font-semibold text-slate-700">{op}</span>
+                  <span className={`text-xs font-mono font-bold ${
+                    rate === 0 ? "text-emerald-600" : rate > 70 ? "text-red-600" : "text-amber-600"
                   }`}>
-                    {rate.toFixed(0)}%
+                    {rate.toFixed(1)}%
                   </span>
                 </div>
-                <p className="text-xs text-slate-500 mb-2">
-                  {opErrors} de {opRecs.length} docs com erro
-                </p>
-                {topErrors.length > 0 && (
-                  <div className="flex flex-col gap-1">
-                    {topErrors.map(([field, count]) => (
-                      <div key={field} className="flex items-center justify-between">
-                        <span className="text-xs text-slate-500 capitalize">{field}</span>
-                        <span className="text-xs font-mono text-red-600 font-semibold">{count}x</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all ${
+                      rate === 0 ? "bg-emerald-400" : rate > 70 ? "bg-red-500" : "bg-amber-400"
+                    }`}
+                    style={{ width: `${(rate / maxRate) * 100}%` }}
+                  />
+                </div>
+                <p className="text-xs text-slate-400 mt-0.5">{errors} de {total} docs com erro</p>
               </div>
-            );
-          })}
+            ));
+          })()}
+        </div>
+
+        {/* Erros por Campo */}
+        <div className="bg-white rounded-xl border border-slate-200 p-5">
+          <h2 className="text-sm font-bold text-slate-700 mb-4 flex items-center gap-1.5">
+            <span>📋</span> Erros por Campo
+          </h2>
+          {(() => {
+            const maxCount = Math.max(...fieldStats.map((f) => f.count), 1);
+            return fieldStats.map(({ field, count, label }) => (
+              <div key={field} className="mb-3 last:mb-0">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs font-semibold text-slate-700">{label}</span>
+                  <span className="text-xs font-mono font-bold text-blue-700">{count}</span>
+                </div>
+                <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-blue-500 transition-all"
+                    style={{ width: `${(count / maxCount) * 100}%` }}
+                  />
+                </div>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  {((count / records.length) * 100).toFixed(0)}% dos registros afetados
+                </p>
+              </div>
+            ));
+          })()}
         </div>
       </div>
 
@@ -345,6 +457,61 @@ export default function Dashboard({ onBack }) {
         >
           →
         </button>
+      </div>
+
+      {/* Analytics row 2: Padrões Detectados + Recomendações do Sistema */}
+      <div className="grid grid-cols-2 gap-4 mt-6">
+        {/* Padrões Detectados */}
+        <div className="bg-white rounded-xl border border-slate-200 p-5">
+          <h2 className="text-sm font-bold text-slate-700 mb-3 flex items-center gap-1.5">
+            <span>🔍</span> Padrões Detectados
+          </h2>
+          {patterns.length === 0 ? (
+            <p className="text-xs text-slate-400 italic">Nenhum padrão de erro identificado.</p>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {patterns.map((p, idx) => (
+                <div
+                  key={idx}
+                  className={`flex gap-2.5 p-3 rounded-lg border ${
+                    p.severity === "error"
+                      ? "bg-red-50 border-red-100"
+                      : "bg-amber-50 border-amber-100"
+                  }`}
+                >
+                  <span className="text-base leading-none mt-0.5">{p.icon}</span>
+                  <div>
+                    <p className="text-xs text-slate-700 leading-snug">{p.text}</p>
+                    {p.detail && (
+                      <p className="text-xs text-slate-400 mt-0.5">{p.detail}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Recomendações do Sistema */}
+        <div className="bg-white rounded-xl border border-slate-200 p-5">
+          <h2 className="text-sm font-bold text-slate-700 mb-3 flex items-center gap-1.5">
+            <span>💡</span> Recomendações do Sistema
+          </h2>
+          {recommendations.length === 0 ? (
+            <p className="text-xs text-slate-400 italic">Nenhuma recomendação pendente.</p>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {recommendations.map((r, idx) => (
+                <div key={idx} className="p-3 bg-slate-50 rounded-lg border border-slate-100">
+                  <p className="text-xs text-slate-700 leading-snug mb-2">{r.text}</p>
+                  <button className={`text-xs font-semibold ${r.actionColor} hover:underline`}>
+                    {r.action} →
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Edit modal */}
