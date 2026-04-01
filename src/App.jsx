@@ -31,9 +31,13 @@ function AppInner() {
     setScreen("indexing");
   };
 
-  const handleDone = () => {
+  const handleDone = (conformeDecreto = null) => {
     setQueue((prev) =>
-      prev.map((d) => (d.id === selectedDoc.id ? { ...d, status: "done" } : d))
+      prev.map((d) =>
+        d.id === selectedDoc.id
+          ? { ...d, status: "done", ...(conformeDecreto !== null && { conformeDecreto10278: conformeDecreto }) }
+          : d
+      )
     );
     const next = queue.find((d) => d.status === "pending" && d.id !== selectedDoc.id);
     if (next) {

@@ -8,6 +8,23 @@ export const DOCUMENT_TYPES = {
   decreto: {
     label: "Decreto",
     color: "blue",
+    decreto10278: true,
+    decreto10278Entidade: "publica",
+    decreto10278Mapping: {
+      assunto: "assunto",
+      autorEmitente: "orgao",
+      dataLocalDigitalizacao: null,
+      identificadorUnico: "numero",
+      responsavelDigitalizacao: null,
+      titulo: "assunto",
+      tipoDocumental: null,
+      hash: null,
+      classe: null,
+      dataProdOriginal: "data_pub",
+      destinacaoPrevista: null,
+      generoDocumental: null,
+      prazoGuarda: null,
+    },
     defaults: {
       esfera: "Distrital",
       situacao: "Vigente",

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useConfig } from "../../context/ConfigContext";
 import FieldEditor, { TYPE_BADGE, FIELD_TYPES } from "./FieldEditor";
+import { getDecretoFields } from "../../data/decree10278";
 
 const COLOR_PALETTE = [
   { key: "blue",    bg: "bg-blue-100",    text: "text-blue-700",    ring: "ring-blue-500" },
@@ -273,6 +274,103 @@ export default function DocTypeEditor() {
                   )}
                 </div>
               </div>
+            </div>
+
+            {/* Decreto 10.278/2020 compliance */}
+            <div className="px-4 py-3 bg-white border-b border-slate-200 flex flex-col gap-2">
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={!!selectedType.decreto10278}
+                  onChange={(e) => updateType(selectedTypeKey, {
+                    decreto10278: e.target.checked,
+                    decreto10278Entidade: selectedType.decreto10278Entidade || "publica",
+                    decreto10278Mapping: selectedType.decreto10278Mapping || {},
+                  })}
+                  className="accent-blue-600 w-3.5 h-3.5"
+                />
+                <span className="text-xs font-semibold text-slate-600">📋 Decreto 10.278/2020</span>
+              </label>
+
+              {selectedType.decreto10278 && (() => {
+                const entidade = selectedType.decreto10278Entidade || "publica";
+                const mapping = selectedType.decreto10278Mapping || {};
+                const decretoFields = getDecretoFields(entidade);
+                const fieldIds = (selectedType.fields || []).map((f) => f.id);
+                const fieldLabels = Object.fromEntries(
+                  (selectedType.fields || []).map((f) => [f.id, f.label])
+                );
+
+                const setMapping = (decretoId, userFieldId) => {
+                  updateType(selectedTypeKey, {
+                    decreto10278Mapping: { ...mapping, [decretoId]: userFieldId || null },
+                  });
+                };
+
+                return (
+                  <div className="flex flex-col gap-2">
+                    {/* Entity type selector */}
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-slate-500 shrink-0">Entidade:</span>
+                      {["publica", "privada"].map((v) => (
+                        <button
+                          key={v}
+                          onClick={() => updateType(selectedTypeKey, { decreto10278Entidade: v })}
+                          className={`text-xs px-2 py-0.5 rounded border transition-colors ${
+                            entidade === v
+                              ? "bg-blue-600 text-white border-blue-600"
+                              : "text-slate-600 border-slate-200 hover:bg-slate-50"
+                          }`}
+                        >
+                          {v === "publica" ? "Pública (13 campos)" : "Privada (8 campos)"}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Mapping table */}
+                    <div className="rounded border border-slate-200 overflow-hidden">
+                      <div className="flex text-xs font-semibold text-slate-500 bg-slate-50 px-2 py-1 border-b border-slate-200">
+                        <span className="flex-1">Campo do Decreto</span>
+                        <span className="flex-1">Campo do formulário</span>
+                      </div>
+                      <div className="max-h-48 overflow-y-auto">
+                        {decretoFields.map((df) => {
+                          const mapped = mapping[df.id] || "";
+                          const isMapped = !!(mapped && fieldIds.includes(mapped));
+                          return (
+                            <div
+                              key={df.id}
+                              className="flex items-center gap-1 px-2 py-1 border-b border-slate-100 last:border-0"
+                              title={df.hint}
+                            >
+                              <div className="flex-1 min-w-0">
+                                <span className={`text-xs truncate block ${isMapped ? "text-slate-700" : "text-slate-400"}`}>
+                                  {df.label}
+                                </span>
+                              </div>
+                              <select
+                                value={mapped}
+                                onChange={(e) => setMapping(df.id, e.target.value)}
+                                className="flex-1 text-xs border border-slate-200 rounded px-1 py-0.5 focus:outline-none focus:border-blue-500 bg-white max-w-[120px]"
+                              >
+                                <option value="">— não mapeado —</option>
+                                {fieldIds.map((fid) => (
+                                  <option key={fid} value={fid}>
+                                    {fieldLabels[fid] || fid}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                    <p className="text-xs text-slate-400 italic leading-tight">
+                      Passe o cursor sobre o nome do campo para ver a descrição do Decreto.
+                    </p>
+                  </div>
+                );
+              })()}
             </div>
 
             {/* Fields list */}

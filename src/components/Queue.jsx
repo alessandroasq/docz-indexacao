@@ -98,7 +98,19 @@ export default function Queue({ queue, onSelect, aiResults, onRunAI, autoAI, set
 
               <div>
                 {isDone ? (
-                  <span className="text-xs text-emerald-600 font-semibold">✓ Pronto</span>
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-xs text-emerald-600 font-semibold">✓ Pronto</span>
+                    {doc.conformeDecreto10278 === true && (
+                      <span className="text-xs font-semibold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 border border-emerald-300 leading-tight">
+                        ✓ Dec. 10.278
+                      </span>
+                    )}
+                    {doc.conformeDecreto10278 === false && (
+                      <span className="text-xs font-semibold px-1.5 py-0.5 rounded bg-red-100 text-red-600 border border-red-200 leading-tight">
+                        ✗ Dec. 10.278
+                      </span>
+                    )}
+                  </div>
                 ) : ai ? (
                   <div className="flex items-center gap-1.5">
                     <div className="w-12 h-1.5 bg-slate-200 rounded-full overflow-hidden">
