@@ -1,6 +1,9 @@
 // Decreto 10.278/2020 — Digitalização de documentos com validade legal
 // Art. 5º + Anexo II: metadados mínimos obrigatórios
 
+// systemProvided: true  → valor fornecido automaticamente pelo sistema (não mapeável a campo do formulário)
+// systemVar             → nome da variável de sistema exibida na UI
+
 // 8 campos obrigatórios para todos os documentos
 export const DECRETO_FIELDS_GERAL = [
   {
@@ -17,6 +20,8 @@ export const DECRETO_FIELDS_GERAL = [
     id: "dataLocalDigitalizacao",
     label: "Data e Local de Digitalização",
     hint: "Registro cronológico (data/hora) e local onde foi realizada a digitalização",
+    systemProvided: true,
+    systemVar: "{data-hora-digitalização}",
   },
   {
     id: "identificadorUnico",
@@ -27,6 +32,8 @@ export const DECRETO_FIELDS_GERAL = [
     id: "responsavelDigitalizacao",
     label: "Responsável pela Digitalização",
     hint: "Pessoa física ou jurídica responsável pela transformação do documento físico em digital",
+    systemProvided: true,
+    systemVar: "{usuário}",
   },
   {
     id: "titulo",
@@ -42,6 +49,8 @@ export const DECRETO_FIELDS_GERAL = [
     id: "hash",
     label: "Hash (Integridade)",
     hint: "Código de verificação da integridade do arquivo digital — gerado automaticamente pelo sistema",
+    systemProvided: true,
+    systemVar: "{hash-sha256}",
   },
 ];
 
@@ -86,9 +95,10 @@ export function getDecretoFields(entidade) {
 
 /**
  * Calcula o status de conformidade para um documento.
+ * Campos com systemProvided:true são sempre considerados atendidos (fornecidos pelo sistema).
  * @param {object} typeConfig  - objeto do tipo documental (do ConfigContext)
  * @param {object} values      - valores atuais do formulário { fieldId: value }
- * @returns {null | { enabled, allMet, missing, fields[] }}
+ * @returns {null | { enabled, allMet, missing, total, entidade, fields[] }}
  */
 export function calcCompliance(typeConfig, values) {
   if (!typeConfig?.decreto10278) return null;
@@ -98,10 +108,14 @@ export function calcCompliance(typeConfig, values) {
   const mapping = typeConfig.decreto10278Mapping || {};
 
   const result = fields.map((f) => {
+    if (f.systemProvided) {
+      // Always met — filled automatically by the system
+      return { ...f, mappedTo: null, value: f.systemVar, met: true, isSystemVar: true };
+    }
     const mappedTo = mapping[f.id] || null;
     const value = mappedTo ? (values?.[mappedTo] ?? "") : "";
     const met = !!(mappedTo && String(value).trim());
-    return { ...f, mappedTo, value, met };
+    return { ...f, mappedTo, value, met, isSystemVar: false };
   });
 
   const missing = result.filter((r) => !r.met).length;
