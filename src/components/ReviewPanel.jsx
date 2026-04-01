@@ -1,7 +1,8 @@
-import React from "react";
-import { DOCUMENT_TYPES } from "../data/documentTypes";
+import React, { useState } from "react";
+import { useConfig } from "../context/ConfigContext";
 import { confidenceColor } from "../utils/validators";
 import { spellCheck } from "../utils/fuzzy";
+import { calcCompliance } from "../data/decree10278";
 
 function ReviewRow({ label, value, confidence, required, checkSpelling }) {
   const conf = confidence ? confidenceColor(confidence) : null;
@@ -46,7 +47,11 @@ function ReviewRow({ label, value, confidence, required, checkSpelling }) {
 }
 
 export default function ReviewPanel({ doc, values, aiData, onConfirm, onEdit }) {
-  const cfg = DOCUMENT_TYPES[doc.type];
+  const { documentTypes } = useConfig();
+  const cfg = documentTypes[doc.type];
+  const [complianceExpanded, setComplianceExpanded] = useState(false);
+
+  const compliance = calcCompliance(cfg, values);
 
   const missingRequired = cfg.fields.filter((f) => {
     if (!f.required) return false;
@@ -115,6 +120,75 @@ export default function ReviewPanel({ doc, values, aiData, onConfirm, onEdit }) 
           </div>
         )}
       </div>
+
+      {/* Decreto 10.278/2020 compliance section */}
+      {compliance && (
+        <div className={`mx-6 mb-4 rounded-lg border ${
+          compliance.allMet
+            ? "bg-emerald-50 border-emerald-200"
+            : "bg-amber-50 border-amber-200"
+        }`}>
+          <button
+            onClick={() => setComplianceExpanded((v) => !v)}
+            className="w-full flex items-center justify-between px-4 py-2.5 text-left"
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-sm">📋</span>
+              <span className={`text-sm font-semibold ${
+                compliance.allMet ? "text-emerald-800" : "text-amber-800"
+              }`}>
+                Decreto 10.278/2020
+              </span>
+              {compliance.allMet ? (
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-300">
+                  ✓ Atende
+                </span>
+              ) : (
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-300">
+                  ⚠ {compliance.missing} campo{compliance.missing > 1 ? "s" : ""} ausente{compliance.missing > 1 ? "s" : ""}
+                </span>
+              )}
+            </div>
+            <span className={`text-xs ${compliance.allMet ? "text-emerald-600" : "text-amber-600"}`}>
+              {complianceExpanded ? "▲ ocultar" : "▼ detalhar"}
+            </span>
+          </button>
+
+          {complianceExpanded && (
+            <div className="px-4 pb-3 border-t border-slate-200">
+              <div className="mt-2 flex flex-col gap-1">
+                {compliance.fields.map((f) => (
+                  <div key={f.id} className="flex items-start gap-2 py-1 border-b border-slate-100 last:border-0">
+                    <span className={`text-xs mt-0.5 ${f.met ? "text-emerald-600" : "text-red-500"}`}>
+                      {f.met ? "✓" : "✗"}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-xs font-semibold text-slate-700">{f.label}</span>
+                      {f.mappedTo ? (
+                        <span className="text-xs text-slate-400 ml-1">→ {f.mappedTo}</span>
+                      ) : (
+                        <span className="text-xs text-red-400 ml-1 italic">não mapeado</span>
+                      )}
+                      {f.met && (
+                        <p className="text-xs text-slate-500 truncate">{f.value}</p>
+                      )}
+                      {!f.met && !f.mappedTo && (
+                        <p className="text-xs text-red-400 italic">Configure o mapeamento em ⚙ Configuração</p>
+                      )}
+                      {!f.met && f.mappedTo && (
+                        <p className="text-xs text-amber-600 italic">Campo mapeado mas não preenchido</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-slate-400 mt-2 italic">
+                Entidade {compliance.entidade === "publica" ? "pública" : "privada"} — {compliance.total} campos exigidos
+              </p>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="px-6 py-4 border-t border-slate-200 flex items-center justify-between bg-slate-50">
         <button onClick={onEdit} className="btn-secondary">

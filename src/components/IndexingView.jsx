@@ -2,8 +2,11 @@ import React, { useState } from "react";
 import PDFViewer from "./PDFViewer";
 import IndexingForm from "./IndexingForm";
 import ReviewPanel from "./ReviewPanel";
+import { useConfig } from "../context/ConfigContext";
+import { calcCompliance } from "../data/decree10278";
 
 export default function IndexingView({ doc, onDone, onBack, autoAI, preloadedAiData }) {
+  const { documentTypes } = useConfig();
   const [screen, setScreen] = useState("form"); // "form" | "review"
   const [savedValues, setSavedValues] = useState(null);
   const [savedAiData, setSavedAiData] = useState(null);
@@ -25,7 +28,11 @@ export default function IndexingView({ doc, onDone, onBack, autoAI, preloadedAiD
   };
 
   const handleConfirm = () => {
-    onDone();
+    const typeCfg = documentTypes[doc.type];
+    const compliance = calcCompliance(typeCfg, savedValues || {});
+    // null means the type doesn't require decree compliance
+    const conformeDecreto = compliance ? compliance.allMet : null;
+    onDone(conformeDecreto);
   };
 
   const handleEdit = () => {

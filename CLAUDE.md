@@ -35,7 +35,8 @@ src/
 ├── data/
 │   ├── documentTypes.js             # Config padrão dos tipos (fallback do ConfigContext)
 │   ├── mockData.js                  # MOCK_QUEUE, MOCK_PDF_CONTENT, MOCK_AI_EXTRACTION
-│   └── vocabulary.js                # Vocabulários padrão (fallback do ConfigContext)
+│   ├── vocabulary.js                # Vocabulários padrão (fallback do ConfigContext)
+│   └── decree10278.js               # Campos Anexo II + helpers getDecretoFields / calcCompliance
 │
 ├── utils/
 │   ├── fuzzy.js                     # spellCheck(text, dict) — dict é parâmetro, não constante
@@ -229,7 +230,40 @@ Acesso: Header → "⚙ Configuração" → `ConfigScreen.jsx`
 
 ---
 
-## 7. Bugs Conhecidos / Limitações
+## 7. Conformidade com Decreto 10.278/2020
+
+Tipos documentais podem ter conformidade habilitada com três campos extras:
+
+```javascript
+{
+  decreto10278: true,               // habilita validação
+  decreto10278Entidade: "publica",  // "publica" (13 campos) | "privada" (8 campos)
+  decreto10278Mapping: {            // decretoFieldId → userFieldId
+    assunto: "assunto",
+    autorEmitente: "orgao",
+    identificadorUnico: "numero",
+    // ...null para campos não mapeados
+  }
+}
+```
+
+**Fluxo:**
+- `DocTypeEditor` → seção "📋 Decreto 10.278/2020" com toggle + seletor de entidade + tabela de mapeamento
+- `ReviewPanel` → seção colapsável mostrando status por campo (✓/✗) + badge geral
+- `IndexingView.handleConfirm` → chama `calcCompliance()` → passa `conformeDecreto` para `onDone()`
+- `App.handleDone(conformeDecreto)` → salva `conformeDecreto10278: true/false` no item da fila
+- `Queue` → badge `✓ Dec. 10.278` (verde) ou `✗ Dec. 10.278` (vermelho) ao lado de "Pronto"
+
+**Helper:**
+```javascript
+import { calcCompliance } from "./data/decree10278";
+const result = calcCompliance(typeConfig, formValues);
+// result: null | { enabled, allMet, missing, total, entidade, fields[] }
+```
+
+---
+
+## 8. Bugs Conhecidos / Limitações
 
 - **Persistência real:** tudo em localStorage — substituir por backend API em produção
 - **IA real:** `MOCK_AI_EXTRACTION` simula extração — integrar Docling/API real
@@ -238,7 +272,7 @@ Acesso: Header → "⚙ Configuração" → `ConfigScreen.jsx`
 
 ---
 
-## 8. Próximos Passos Sugeridos
+## 9. Próximos Passos Sugeridos
 
 - Integrar OCR real (Tesseract.js) para extração de texto de PDFs digitalizados
 - Backend/API para persistência real (substituir localStorage)
