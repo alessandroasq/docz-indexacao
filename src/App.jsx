@@ -5,6 +5,7 @@ import Queue from "./components/Queue";
 import IndexingView from "./components/IndexingView";
 import Dashboard from "./components/Dashboard";
 import ConfigScreen from "./components/config/ConfigScreen";
+import ValidatorScreen from "./components/ValidatorScreen";
 import SplashScreen from "./components/SplashScreen";
 import { MOCK_QUEUE, MOCK_AI_EXTRACTION } from "./data/mockData";
 
@@ -80,6 +81,9 @@ function AppInner() {
         )}
         {screen === "config" && (
           <ConfigScreen onBack={() => setScreen("queue")} />
+        )}
+        {screen === "validator" && (
+          <ValidatorScreen />
         )}
       </main>
     </div>
