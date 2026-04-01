@@ -36,6 +36,16 @@ export default function Header({ screen, onNavigate }) {
             Dashboard QA
           </button>
           <button
+            onClick={() => onNavigate("validator")}
+            className={`px-3 py-1.5 rounded text-xs font-semibold transition-colors ${
+              screen === "validator"
+                ? "bg-slate-700 text-blue-300"
+                : "text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            🔍 Validar Dec. 10.278
+          </button>
+          <button
             onClick={() => onNavigate("config")}
             className={`px-3 py-1.5 rounded text-xs font-semibold transition-colors ${
               screen === "config"
