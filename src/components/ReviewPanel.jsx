@@ -164,18 +164,25 @@ export default function ReviewPanel({ doc, values, aiData, onConfirm, onEdit }) 
                     </span>
                     <div className="flex-1 min-w-0">
                       <span className="text-xs font-semibold text-slate-700">{f.label}</span>
-                      {f.mappedTo ? (
+                      {f.isSystemVar ? (
+                        <span className="text-xs font-mono font-semibold text-orange-600 ml-1 bg-orange-50 border border-orange-200 px-1.5 py-0.5 rounded">
+                          {f.systemVar}
+                        </span>
+                      ) : f.mappedTo ? (
                         <span className="text-xs text-slate-400 ml-1">→ {f.mappedTo}</span>
                       ) : (
                         <span className="text-xs text-red-400 ml-1 italic">não mapeado</span>
                       )}
-                      {f.met && (
+                      {f.met && !f.isSystemVar && (
                         <p className="text-xs text-slate-500 truncate">{f.value}</p>
                       )}
-                      {!f.met && !f.mappedTo && (
+                      {f.isSystemVar && (
+                        <p className="text-xs text-orange-500 italic">Preenchido automaticamente pelo sistema</p>
+                      )}
+                      {!f.met && !f.isSystemVar && !f.mappedTo && (
                         <p className="text-xs text-red-400 italic">Configure o mapeamento em ⚙ Configuração</p>
                       )}
-                      {!f.met && f.mappedTo && (
+                      {!f.met && !f.isSystemVar && f.mappedTo && (
                         <p className="text-xs text-amber-600 italic">Campo mapeado mas não preenchido</p>
                       )}
                     </div>

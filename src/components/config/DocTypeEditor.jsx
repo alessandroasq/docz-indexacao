@@ -1,15 +1,15 @@
 import React, { useState } from "react";
 import { useConfig } from "../../context/ConfigContext";
-import FieldEditor, { TYPE_BADGE, FIELD_TYPES } from "./FieldEditor";
+import FieldEditor, { TYPE_BADGE } from "./FieldEditor";
 import { getDecretoFields } from "../../data/decree10278";
 
 const COLOR_PALETTE = [
-  { key: "blue",    bg: "bg-blue-100",    text: "text-blue-700",    ring: "ring-blue-500" },
-  { key: "violet",  bg: "bg-violet-100",  text: "text-violet-700",  ring: "ring-violet-500" },
-  { key: "amber",   bg: "bg-amber-100",   text: "text-amber-700",   ring: "ring-amber-500" },
-  { key: "emerald", bg: "bg-emerald-100", text: "text-emerald-700", ring: "ring-emerald-500" },
-  { key: "rose",    bg: "bg-rose-100",    text: "text-rose-700",    ring: "ring-rose-500" },
-  { key: "slate",   bg: "bg-slate-100",   text: "text-slate-700",   ring: "ring-slate-400" },
+  { key: "blue",    bg400: "bg-blue-400",    ring: "ring-blue-500" },
+  { key: "violet",  bg400: "bg-violet-400",  ring: "ring-violet-500" },
+  { key: "amber",   bg400: "bg-amber-400",   ring: "ring-amber-500" },
+  { key: "emerald", bg400: "bg-emerald-400", ring: "ring-emerald-500" },
+  { key: "rose",    bg400: "bg-rose-400",    ring: "ring-rose-500" },
+  { key: "slate",   bg400: "bg-slate-400",   ring: "ring-slate-400" },
 ];
 
 function colorFor(key) {
@@ -52,11 +52,10 @@ export default function DocTypeEditor() {
     if (!label) return;
     const key = slugify(label) || "tipo";
     const safeKey = documentTypes[key] ? key + "_" + Date.now() : key;
-    const next = {
+    setDocumentTypes({
       ...documentTypes,
       [safeKey]: { label, color: "blue", defaults: {}, fields: [] },
-    };
-    setDocumentTypes(next);
+    });
     setSelectedTypeKey(safeKey);
     setSelectedFieldId(null);
     setNewTypeName("");
@@ -84,22 +83,23 @@ export default function DocTypeEditor() {
     if (!selectedTypeKey) return;
     const existingIds = (selectedType.fields || []).map((f) => f.id);
     const field = newField("Novo campo", existingIds);
-    const fields = [...(selectedType.fields || []), field];
-    updateType(selectedTypeKey, { fields });
+    updateType(selectedTypeKey, { fields: [...(selectedType.fields || []), field] });
     setSelectedFieldId(field.id);
   };
 
   const deleteField = (fieldId) => {
-    const fields = (selectedType.fields || []).filter((f) => f.id !== fieldId);
-    updateType(selectedTypeKey, { fields });
+    updateType(selectedTypeKey, {
+      fields: (selectedType.fields || []).filter((f) => f.id !== fieldId),
+    });
     if (selectedFieldId === fieldId) setSelectedFieldId(null);
   };
 
   const updateField = (updatedField) => {
-    const fields = (selectedType.fields || []).map((f) =>
-      f.id === selectedFieldId ? updatedField : f
-    );
-    updateType(selectedTypeKey, { fields });
+    updateType(selectedTypeKey, {
+      fields: (selectedType.fields || []).map((f) =>
+        f.id === selectedFieldId ? updatedField : f
+      ),
+    });
     setSelectedFieldId(updatedField.id);
   };
 
@@ -112,34 +112,13 @@ export default function DocTypeEditor() {
     updateType(selectedTypeKey, { fields });
   };
 
-  // ── Defaults (key-value) ──────────────────────────────────────
-
-  const setDefault = (k, v, oldKey) => {
-    const defaults = { ...(selectedType?.defaults || {}) };
-    // Always remove the old key first (even if it's an empty string)
-    delete defaults[oldKey];
-    // Only add the new key if it's non-empty
-    if (k.trim()) defaults[k] = v;
-    updateType(selectedTypeKey, { defaults });
-  };
-
-  const removeDefault = (k) => {
-    const defaults = { ...(selectedType?.defaults || {}) };
-    delete defaults[k];
-    updateType(selectedTypeKey, { defaults });
-  };
-
-  const addDefault = () => updateType(selectedTypeKey, {
-    defaults: { ...(selectedType?.defaults || {}), "": "" },
-  });
-
   return (
     <div className="flex h-full overflow-hidden">
 
-      {/* ── LEFT PANEL: Type list ──────────────────────────── */}
-      <div className="w-52 shrink-0 flex flex-col bg-white border-r border-slate-200 overflow-hidden">
+      {/* ── PANEL 1: Type list ────────────────────────────────── */}
+      <div className="w-44 shrink-0 flex flex-col bg-white border-r border-slate-200 overflow-hidden">
         <div className="px-3 py-2.5 bg-slate-50 border-b border-slate-200">
-          <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">Tipos documentais</p>
+          <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">Tipos</p>
         </div>
         <div className="flex-1 overflow-y-auto">
           {typeKeys.map((key) => {
@@ -154,7 +133,7 @@ export default function DocTypeEditor() {
                   active ? "bg-blue-50" : "hover:bg-slate-50"
                 }`}
               >
-                <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${col.bg.replace("bg-", "bg-").replace("100", "400")}`} />
+                <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${col.bg400}`} />
                 <span className={`flex-1 text-sm font-medium truncate ${active ? "text-blue-700" : "text-slate-700"}`}>
                   {dt.label}
                 </span>
@@ -168,8 +147,6 @@ export default function DocTypeEditor() {
             );
           })}
         </div>
-
-        {/* Add type */}
         <div className="p-3 border-t border-slate-200 bg-slate-50">
           {addingType ? (
             <div className="flex flex-col gap-1.5">
@@ -191,7 +168,7 @@ export default function DocTypeEditor() {
                 </button>
                 <button onClick={() => setAddingType(false)}
                   className="flex-1 text-xs py-1 border border-slate-200 text-slate-500 rounded hover:bg-slate-100">
-                  Cancelar
+                  ✕
                 </button>
               </div>
             </div>
@@ -206,179 +183,46 @@ export default function DocTypeEditor() {
         </div>
       </div>
 
-      {/* ── CENTER PANEL: Fields list ──────────────────────── */}
-      <div className="w-72 shrink-0 flex flex-col bg-slate-50 border-r border-slate-200 overflow-hidden">
+      {/* ── PANEL 2: Fields list ──────────────────────────────── */}
+      <div className="w-52 shrink-0 flex flex-col bg-slate-50 border-r border-slate-200 overflow-hidden">
         {!selectedType ? (
-          <div className="flex-1 flex items-center justify-center text-slate-400 text-sm">
-            Selecione um tipo documental
+          <div className="flex-1 flex items-center justify-center text-slate-400 text-xs text-center px-4">
+            Selecione um tipo
           </div>
         ) : (
           <>
-            {/* Type meta */}
-            <div className="px-4 py-3 bg-white border-b border-slate-200 flex flex-col gap-3">
+            {/* Type meta: label + color */}
+            <div className="px-3 py-2.5 bg-white border-b border-slate-200 flex flex-col gap-2">
+              <input
+                value={selectedType.label}
+                onChange={(e) => updateType(selectedTypeKey, { label: e.target.value })}
+                className="w-full text-sm font-semibold text-slate-700 border-b border-transparent hover:border-slate-300 focus:border-blue-500 focus:outline-none bg-transparent px-0 py-0.5"
+              />
               <div className="flex items-center gap-2">
-                <input
-                  value={selectedType.label}
-                  onChange={(e) => updateType(selectedTypeKey, { label: e.target.value })}
-                  className="flex-1 text-sm font-semibold text-slate-700 border-b border-transparent hover:border-slate-300 focus:border-blue-500 focus:outline-none bg-transparent px-0 py-0.5"
-                />
-                <span className="text-xs text-slate-400 font-mono">{selectedTypeKey}</span>
-              </div>
-
-              {/* Color picker */}
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-slate-400">Cor:</span>
+                <span className="text-xs text-slate-400 shrink-0">Cor:</span>
                 <div className="flex gap-1.5">
                   {COLOR_PALETTE.map((c) => (
                     <button
                       key={c.key}
                       onClick={() => updateType(selectedTypeKey, { color: c.key })}
-                      className={`w-5 h-5 rounded-full ${c.bg.replace("100", "400")} transition-all ${
-                        selectedType.color === c.key ? `ring-2 ring-offset-1 ${c.ring}` : "opacity-60 hover:opacity-100"
+                      className={`w-4 h-4 rounded-full ${c.bg400} transition-all ${
+                        selectedType.color === c.key ? `ring-2 ring-offset-1 ${c.ring}` : "opacity-50 hover:opacity-100"
                       }`}
                       title={c.key}
                     />
                   ))}
                 </div>
               </div>
-
-              {/* Defaults */}
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-xs font-semibold text-slate-500">Valores padrão</span>
-                  <button onClick={addDefault}
-                    className="text-xs text-blue-600 hover:underline">+ Add</button>
-                </div>
-                <div className="flex flex-col gap-1">
-                  {Object.entries(selectedType.defaults || {}).map(([k, v], i) => (
-                    <div key={i} className="flex items-center gap-1">
-                      <input
-                        value={k}
-                        onChange={(e) => setDefault(e.target.value, v, k)}
-                        placeholder="campo_id"
-                        className="w-24 px-1.5 py-0.5 text-xs border border-slate-200 rounded font-mono focus:outline-none focus:border-blue-500 bg-white"
-                      />
-                      <span className="text-slate-300 text-xs">=</span>
-                      <input
-                        value={v}
-                        onChange={(e) => setDefault(k, e.target.value)}
-                        placeholder="valor"
-                        className="flex-1 px-1.5 py-0.5 text-xs border border-slate-200 rounded focus:outline-none focus:border-blue-500 bg-white"
-                      />
-                      <button onClick={() => removeDefault(k)}
-                        className="text-slate-300 hover:text-red-500 text-xs">✕</button>
-                    </div>
-                  ))}
-                  {Object.keys(selectedType.defaults || {}).length === 0 && (
-                    <p className="text-xs text-slate-400 italic">Nenhum valor padrão.</p>
-                  )}
-                </div>
-              </div>
             </div>
 
-            {/* Decreto 10.278/2020 compliance */}
-            <div className="px-4 py-3 bg-white border-b border-slate-200 flex flex-col gap-2">
-              <label className="flex items-center gap-2 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={!!selectedType.decreto10278}
-                  onChange={(e) => updateType(selectedTypeKey, {
-                    decreto10278: e.target.checked,
-                    decreto10278Entidade: selectedType.decreto10278Entidade || "publica",
-                    decreto10278Mapping: selectedType.decreto10278Mapping || {},
-                  })}
-                  className="accent-blue-600 w-3.5 h-3.5"
-                />
-                <span className="text-xs font-semibold text-slate-600">📋 Decreto 10.278/2020</span>
-              </label>
-
-              {selectedType.decreto10278 && (() => {
-                const entidade = selectedType.decreto10278Entidade || "publica";
-                const mapping = selectedType.decreto10278Mapping || {};
-                const decretoFields = getDecretoFields(entidade);
-                const fieldIds = (selectedType.fields || []).map((f) => f.id);
-                const fieldLabels = Object.fromEntries(
-                  (selectedType.fields || []).map((f) => [f.id, f.label])
-                );
-
-                const setMapping = (decretoId, userFieldId) => {
-                  updateType(selectedTypeKey, {
-                    decreto10278Mapping: { ...mapping, [decretoId]: userFieldId || null },
-                  });
-                };
-
-                return (
-                  <div className="flex flex-col gap-2">
-                    {/* Entity type selector */}
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-slate-500 shrink-0">Entidade:</span>
-                      {["publica", "privada"].map((v) => (
-                        <button
-                          key={v}
-                          onClick={() => updateType(selectedTypeKey, { decreto10278Entidade: v })}
-                          className={`text-xs px-2 py-0.5 rounded border transition-colors ${
-                            entidade === v
-                              ? "bg-blue-600 text-white border-blue-600"
-                              : "text-slate-600 border-slate-200 hover:bg-slate-50"
-                          }`}
-                        >
-                          {v === "publica" ? "Pública (13 campos)" : "Privada (8 campos)"}
-                        </button>
-                      ))}
-                    </div>
-
-                    {/* Mapping table */}
-                    <div className="rounded border border-slate-200 overflow-hidden">
-                      <div className="flex text-xs font-semibold text-slate-500 bg-slate-50 px-2 py-1 border-b border-slate-200">
-                        <span className="flex-1">Campo do Decreto</span>
-                        <span className="flex-1">Campo do formulário</span>
-                      </div>
-                      <div className="max-h-48 overflow-y-auto">
-                        {decretoFields.map((df) => {
-                          const mapped = mapping[df.id] || "";
-                          const isMapped = !!(mapped && fieldIds.includes(mapped));
-                          return (
-                            <div
-                              key={df.id}
-                              className="flex items-center gap-1 px-2 py-1 border-b border-slate-100 last:border-0"
-                              title={df.hint}
-                            >
-                              <div className="flex-1 min-w-0">
-                                <span className={`text-xs truncate block ${isMapped ? "text-slate-700" : "text-slate-400"}`}>
-                                  {df.label}
-                                </span>
-                              </div>
-                              <select
-                                value={mapped}
-                                onChange={(e) => setMapping(df.id, e.target.value)}
-                                className="flex-1 text-xs border border-slate-200 rounded px-1 py-0.5 focus:outline-none focus:border-blue-500 bg-white max-w-[120px]"
-                              >
-                                <option value="">— não mapeado —</option>
-                                {fieldIds.map((fid) => (
-                                  <option key={fid} value={fid}>
-                                    {fieldLabels[fid] || fid}
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                    <p className="text-xs text-slate-400 italic leading-tight">
-                      Passe o cursor sobre o nome do campo para ver a descrição do Decreto.
-                    </p>
-                  </div>
-                );
-              })()}
-            </div>
-
-            {/* Fields list */}
-            <div className="px-3 py-2 bg-slate-100 border-b border-slate-200">
+            {/* Fields list header */}
+            <div className="px-3 py-2 bg-slate-100 border-b border-slate-200 flex items-center justify-between">
               <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">
                 Campos ({selectedType.fields?.length || 0})
               </p>
             </div>
+
+            {/* Fields */}
             <div className="flex-1 overflow-y-auto">
               {(selectedType.fields || []).length === 0 && (
                 <p className="text-xs text-slate-400 italic text-center py-6">Nenhum campo ainda.</p>
@@ -391,7 +235,7 @@ export default function DocTypeEditor() {
                   <div
                     key={f.id}
                     onClick={() => setSelectedFieldId(f.id)}
-                    className={`flex items-center gap-2 px-3 py-2.5 cursor-pointer border-b border-slate-100 group transition-colors ${
+                    className={`flex items-center gap-1.5 px-2.5 py-2 cursor-pointer border-b border-slate-100 group transition-colors ${
                       active ? "bg-blue-50" : "hover:bg-white"
                     }`}
                   >
@@ -408,13 +252,13 @@ export default function DocTypeEditor() {
                       >▼</button>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className={`text-sm font-medium truncate ${active ? "text-blue-700" : "text-slate-700"}`}>
+                      <p className={`text-xs font-medium truncate ${active ? "text-blue-700" : "text-slate-700"}`}>
                         {f.label}
                         {f.required && <span className="text-red-400 ml-0.5">*</span>}
                       </p>
                       <p className="text-xs text-slate-400 font-mono truncate">{f.id}</p>
                     </div>
-                    <span className={`text-xs font-semibold px-1.5 py-0.5 rounded shrink-0 ${badge}`}>
+                    <span className={`text-xs font-semibold px-1 py-0.5 rounded shrink-0 ${badge}`}>
                       {f.type}
                     </span>
                   </div>
@@ -422,8 +266,7 @@ export default function DocTypeEditor() {
               })}
             </div>
 
-            {/* Add field */}
-            <div className="p-3 border-t border-slate-200 bg-white">
+            <div className="p-2.5 border-t border-slate-200 bg-white">
               <button
                 onClick={addField}
                 className="w-full text-xs py-1.5 text-blue-600 border border-blue-200 rounded hover:bg-blue-50 transition-colors"
@@ -435,13 +278,145 @@ export default function DocTypeEditor() {
         )}
       </div>
 
-      {/* ── RIGHT PANEL: Field editor ──────────────────────── */}
+      {/* ── PANEL 3: Decreto 10.278/2020 ──────────────────────── */}
+      <div className="w-72 shrink-0 flex flex-col bg-white border-r border-slate-200 overflow-hidden">
+        <div className="px-3 py-2.5 bg-slate-50 border-b border-slate-200 flex items-center gap-2">
+          <span className="text-sm">📋</span>
+          <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">Decreto 10.278/2020</p>
+        </div>
+
+        {!selectedType ? (
+          <div className="flex-1 flex items-center justify-center text-slate-400 text-xs text-center px-4">
+            Selecione um tipo para configurar
+          </div>
+        ) : (
+          <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-3">
+            {/* Toggle */}
+            <label className="flex items-center gap-2 cursor-pointer select-none p-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors">
+              <input
+                type="checkbox"
+                checked={!!selectedType.decreto10278}
+                onChange={(e) => updateType(selectedTypeKey, {
+                  decreto10278: e.target.checked,
+                  decreto10278Entidade: selectedType.decreto10278Entidade || "publica",
+                  decreto10278Mapping: selectedType.decreto10278Mapping || {},
+                })}
+                className="accent-blue-600 w-3.5 h-3.5"
+              />
+              <div>
+                <p className="text-xs font-semibold text-slate-700">Exige conformidade</p>
+                <p className="text-xs text-slate-400 leading-tight">Habilita validação pelo Decreto</p>
+              </div>
+            </label>
+
+            {selectedType.decreto10278 && (() => {
+              const entidade = selectedType.decreto10278Entidade || "publica";
+              const mapping = selectedType.decreto10278Mapping || {};
+              const decretoFields = getDecretoFields(entidade);
+              const fieldIds = (selectedType.fields || []).map((f) => f.id);
+              const fieldLabels = Object.fromEntries(
+                (selectedType.fields || []).map((f) => [f.id, f.label])
+              );
+
+              const setMapping = (decretoId, userFieldId) => {
+                updateType(selectedTypeKey, {
+                  decreto10278Mapping: { ...mapping, [decretoId]: userFieldId || null },
+                });
+              };
+
+              return (
+                <>
+                  {/* Entity type */}
+                  <div className="flex flex-col gap-1.5">
+                    <span className="text-xs font-semibold text-slate-500">Tipo de entidade:</span>
+                    <div className="flex gap-1.5">
+                      {[
+                        { v: "publica",  label: "Pública (13)" },
+                        { v: "privada",  label: "Privada (8)" },
+                      ].map(({ v, label }) => (
+                        <button
+                          key={v}
+                          onClick={() => updateType(selectedTypeKey, { decreto10278Entidade: v })}
+                          className={`flex-1 text-xs px-2 py-1 rounded border transition-colors ${
+                            entidade === v
+                              ? "bg-blue-600 text-white border-blue-600"
+                              : "text-slate-600 border-slate-200 hover:bg-slate-50"
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Mapping table */}
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-xs font-semibold text-slate-500">Mapeamento de campos:</span>
+                    <div className="rounded-lg border border-slate-200 overflow-hidden">
+                      {decretoFields.map((df) => {
+                        const isSystem = !!df.systemProvided;
+                        const mapped = mapping[df.id] || "";
+                        const isMapped = isSystem || !!(mapped && fieldIds.includes(mapped));
+
+                        return (
+                          <div
+                            key={df.id}
+                            className="flex items-center gap-1.5 px-2.5 py-1.5 border-b border-slate-100 last:border-0"
+                            title={df.hint}
+                          >
+                            {/* Status dot */}
+                            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                              isSystem ? "bg-orange-400" : isMapped ? "bg-emerald-400" : "bg-slate-300"
+                            }`} />
+
+                            <span className={`flex-1 text-xs min-w-0 truncate ${
+                              isMapped ? "text-slate-700" : "text-slate-400"
+                            }`}>
+                              {df.label}
+                            </span>
+
+                            {isSystem ? (
+                              <span className="text-xs font-mono font-semibold text-orange-600 bg-orange-50 border border-orange-200 px-1.5 py-0.5 rounded shrink-0">
+                                {df.systemVar}
+                              </span>
+                            ) : (
+                              <select
+                                value={mapped}
+                                onChange={(e) => setMapping(df.id, e.target.value)}
+                                className="text-xs border border-slate-200 rounded px-1 py-0.5 focus:outline-none focus:border-blue-500 bg-white w-28 shrink-0"
+                              >
+                                <option value="">— mapear —</option>
+                                {fieldIds.map((fid) => (
+                                  <option key={fid} value={fid}>
+                                    {fieldLabels[fid] || fid}
+                                  </option>
+                                ))}
+                              </select>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="text-xs text-slate-400 leading-snug p-2 bg-orange-50 border border-orange-100 rounded-lg">
+                    <span className="font-semibold text-orange-700">Variáveis do sistema</span> —
+                    campos marcados em laranja são preenchidos automaticamente pelo sistema no momento da digitalização.
+                  </div>
+                </>
+              );
+            })()}
+          </div>
+        )}
+      </div>
+
+      {/* ── PANEL 4: Field editor ──────────────────────────────── */}
       <div className="flex-1 overflow-hidden bg-white">
         {!selectedField ? (
           <div className="flex flex-col items-center justify-center h-full text-center text-slate-400 gap-2 px-8">
             <span className="text-3xl">←</span>
             <p className="text-sm font-medium">Selecione um campo para editá-lo</p>
-            <p className="text-xs">Ou adicione um novo campo no painel central</p>
+            <p className="text-xs">Ou crie um novo campo no painel de campos</p>
           </div>
         ) : (
           <FieldEditor

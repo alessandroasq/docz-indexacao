@@ -39,15 +39,24 @@ export default function IndexingForm({ doc, onSave, onSkip, selectedPdfText, aut
 
   // Reset when document changes; if AI was already run in queue, pre-fill immediately
   useEffect(() => {
+    // Build initial values from field-level defaultValue (type-level defaults kept for compat)
+    const buildDefaults = () => {
+      const vals = { ...(cfg?.defaults || {}) };
+      (cfg?.fields || []).forEach((f) => {
+        if (f.defaultValue !== undefined && f.defaultValue !== "") vals[f.id] = f.defaultValue;
+      });
+      return vals;
+    };
+
     if (preloadedAiData) {
-      const newVals = { ...(cfg?.defaults || {}) };
+      const newVals = buildDefaults();
       Object.entries(preloadedAiData).forEach(([key, data]) => {
         if (data.value) newVals[key] = data.value;
       });
       setValues(newVals);
       setAiActive(true);
     } else {
-      setValues(cfg?.defaults ? { ...cfg.defaults } : {});
+      setValues(buildDefaults());
       setAiActive(false);
     }
     setAiLoading(false);

@@ -206,9 +206,55 @@ function SignatureCard({ signatureInfo }) {
           </div>
         )}
 
-        <p className="text-xs text-slate-400 italic pt-1">
-          Para validação completa de assinaturas ICP-Brasil (verificação OCSP, cadeia de confiança), utilize o Verificador de Conformidade do ITI ou integre com API de validação servidor.
-        </p>
+        <div className="mt-1 p-3 bg-blue-50 border border-blue-200 rounded-lg flex flex-col gap-2">
+          <p className="text-xs font-semibold text-blue-800">Opções para validação completa ICP-Brasil:</p>
+          <div className="flex flex-col gap-1.5 text-xs text-blue-700">
+            <div className="flex items-start gap-2">
+              <span className="shrink-0">①</span>
+              <span>
+                <strong>Portal ITI (gratuito):</strong> Envie o arquivo para validação oficial.{" "}
+                <a
+                  href="https://validar.iti.gov.br"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline font-semibold hover:text-blue-900"
+                >
+                  validar.iti.gov.br ↗
+                </a>
+              </span>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="shrink-0">②</span>
+              <span>
+                <strong>API ITI (OAuth 2.0):</strong> endpoint <span className="font-mono bg-blue-100 px-1 rounded">https://api.iti.gov.br/</span> — requer credenciais OAuth2 solicitadas ao ITI (gratuito para órgãos públicos).
+              </span>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="shrink-0">③</span>
+              <span>
+                <strong>Lacuna RestPKI:</strong> API REST com suporte ICP-Brasil — plano gratuito para desenvolvimento disponível em{" "}
+                <a
+                  href="https://pki.rest"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline font-semibold hover:text-blue-900"
+                >
+                  pki.rest ↗
+                </a>
+              </span>
+            </div>
+          </div>
+          {detected && (
+            <a
+              href="https://validar.iti.gov.br"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-1 inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors w-fit"
+            >
+              🔗 Validar no Portal ITI ↗
+            </a>
+          )}
+        </div>
       </div>
     </div>
   );
