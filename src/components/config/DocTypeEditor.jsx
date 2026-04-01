@@ -1,7 +1,45 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import { useConfig } from "../../context/ConfigContext";
 import FieldEditor, { TYPE_BADGE } from "./FieldEditor";
 import { getDecretoFields } from "../../data/decree10278";
+
+// ── Resizable divider ─────────────────────────────────────────────────────────
+function Divider({ onDrag }) {
+  const dragging = useRef(false);
+
+  const onMouseDown = useCallback((e) => {
+    e.preventDefault();
+    dragging.current = true;
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+
+    const onMouseMove = (ev) => { if (dragging.current) onDrag(ev.movementX); };
+    const onMouseUp   = ()    => {
+      dragging.current = false;
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup",   onMouseUp);
+    };
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup",   onMouseUp);
+  }, [onDrag]);
+
+  return (
+    <div
+      onMouseDown={onMouseDown}
+      className="w-1.5 shrink-0 bg-slate-200 hover:bg-blue-400 active:bg-blue-500 cursor-col-resize transition-colors relative group"
+      title="Arraste para redimensionar"
+    >
+      {/* Grip dots */}
+      <div className="absolute inset-y-0 left-0 right-0 flex flex-col items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+        {[0,1,2,3].map(i => (
+          <span key={i} className="w-0.5 h-0.5 rounded-full bg-white" />
+        ))}
+      </div>
+    </div>
+  );
+}
 
 const COLOR_PALETTE = [
   { key: "blue",    bg400: "bg-blue-400",    ring: "ring-blue-500" },
@@ -41,6 +79,18 @@ export default function DocTypeEditor() {
   const [selectedFieldId, setSelectedFieldId] = useState(null);
   const [newTypeName, setNewTypeName] = useState("");
   const [addingType, setAddingType] = useState(false);
+
+  // Panel widths (px); panel 4 takes the remaining flex space
+  const [widths, setWidths] = useState({ p1: 176, p2: 208, p3: 288 });
+  const MIN = 120;
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+  const resizeP1 = useCallback((dx) =>
+    setWidths((w) => ({ ...w, p1: clamp(w.p1 + dx, MIN, 400) })), []);
+  const resizeP2 = useCallback((dx) =>
+    setWidths((w) => ({ ...w, p2: clamp(w.p2 + dx, MIN, 400) })), []);
+  const resizeP3 = useCallback((dx) =>
+    setWidths((w) => ({ ...w, p3: clamp(w.p3 + dx, MIN, 500) })), []);
 
   const selectedType = selectedTypeKey ? documentTypes[selectedTypeKey] : null;
   const selectedField = selectedType?.fields?.find((f) => f.id === selectedFieldId) || null;
@@ -116,7 +166,7 @@ export default function DocTypeEditor() {
     <div className="flex h-full overflow-hidden">
 
       {/* ── PANEL 1: Type list ────────────────────────────────── */}
-      <div className="w-44 shrink-0 flex flex-col bg-white border-r border-slate-200 overflow-hidden">
+      <div style={{ width: widths.p1 }} className="shrink-0 flex flex-col bg-white overflow-hidden">
         <div className="px-3 py-2.5 bg-slate-50 border-b border-slate-200">
           <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">Tipos</p>
         </div>
@@ -183,8 +233,10 @@ export default function DocTypeEditor() {
         </div>
       </div>
 
+      <Divider onDrag={resizeP1} />
+
       {/* ── PANEL 2: Fields list ──────────────────────────────── */}
-      <div className="w-52 shrink-0 flex flex-col bg-slate-50 border-r border-slate-200 overflow-hidden">
+      <div style={{ width: widths.p2 }} className="shrink-0 flex flex-col bg-slate-50 overflow-hidden">
         {!selectedType ? (
           <div className="flex-1 flex items-center justify-center text-slate-400 text-xs text-center px-4">
             Selecione um tipo
@@ -278,8 +330,10 @@ export default function DocTypeEditor() {
         )}
       </div>
 
+      <Divider onDrag={resizeP2} />
+
       {/* ── PANEL 3: Decreto 10.278/2020 ──────────────────────── */}
-      <div className="w-72 shrink-0 flex flex-col bg-white border-r border-slate-200 overflow-hidden">
+      <div style={{ width: widths.p3 }} className="shrink-0 flex flex-col bg-white overflow-hidden">
         <div className="px-3 py-2.5 bg-slate-50 border-b border-slate-200 flex items-center gap-2">
           <span className="text-sm">📋</span>
           <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">Decreto 10.278/2020</p>
@@ -410,8 +464,10 @@ export default function DocTypeEditor() {
         )}
       </div>
 
+      <Divider onDrag={resizeP3} />
+
       {/* ── PANEL 4: Field editor ──────────────────────────────── */}
-      <div className="flex-1 overflow-hidden bg-white">
+      <div className="flex-1 min-w-0 overflow-hidden bg-white">
         {!selectedField ? (
           <div className="flex flex-col items-center justify-center h-full text-center text-slate-400 gap-2 px-8">
             <span className="text-3xl">←</span>
